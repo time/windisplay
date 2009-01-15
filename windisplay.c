@@ -1,3 +1,20 @@
+/*
+  Copyright 2009 Time
+  
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #include "windows.h"
 #include "ocidl.h"
 #include "olectl.h"
@@ -56,6 +73,21 @@ int WINAPI WinMain(
   MSG          msg ;
   WNDCLASS     wndclass ;
   char *filename = lpCmdLine;
+  int filename_length = strlen(filename);
+  
+  if (filename_length >= 2)
+  {
+    if (filename[0] == '"')
+    {
+      filename += 1;
+      filename_length -= 1;
+    }
+    if (filename[filename_length-1] == '"')
+    {
+      filename[filename_length-1] = '\0';
+      filename_length -= 1;
+    }
+  }
   
   printf("Loading %s...\n", filename);
   hbmp = (HBITMAP)LoadImage(
