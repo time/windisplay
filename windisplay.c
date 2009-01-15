@@ -18,6 +18,7 @@
 #include "windows.h"
 #include "ocidl.h"
 #include "olectl.h"
+#include "stdio.h"
 
 HBITMAP hbmp;
 BITMAP bmp;
@@ -29,7 +30,8 @@ LRESULT CALLBACK WndProc(
   LPARAM lParam
 ) {
   PAINTSTRUCT ps; 
-  HDC hdc; 
+  HDC hdc, memdc;
+
   switch (uMsg)
   { 
     case WM_CREATE: 
@@ -37,7 +39,7 @@ LRESULT CALLBACK WndProc(
       
     case WM_PAINT: 
       hdc = BeginPaint(hwnd, &ps);
-      HDC memdc = CreateCompatibleDC(hdc);
+      memdc = CreateCompatibleDC(hdc);
       SelectObject(memdc, hbmp);
       BitBlt(
         hdc,            // handle to destination DC
@@ -73,7 +75,8 @@ int WINAPI WinMain(
   MSG          msg ;
   WNDCLASS     wndclass ;
   char *filename = lpCmdLine;
-  int filename_length = strlen(filename);
+  size_t filename_length = strlen(filename);
+  RECT rect;
   
   if (filename_length >= 2)
   {
@@ -89,7 +92,6 @@ int WINAPI WinMain(
     }
   }
   
-  printf("Loading %s...\n", filename);
   hbmp = (HBITMAP)LoadImage(
     NULL,
     filename,
@@ -100,8 +102,8 @@ int WINAPI WinMain(
   
   if (hbmp == NULL)
   {
-    printf("Error loading bmp: %d\n", GetLastError());
-    exit(1);
+    printf("Unable to load file \"%s\": %d", filename, GetLastError());
+    return 1;
   }
   GetObject(hbmp,sizeof(bmp),&bmp);
 
@@ -109,7 +111,7 @@ int WINAPI WinMain(
   wndclass.cbWndExtra    = 0 ;
   
   // The default window background
-  wndclass.hbrBackground = COLOR_WINDOW;
+  wndclass.hbrBackground = (HBRUSH)COLOR_WINDOW;
   
   // The system, IDC_ARROW cursor
   wndclass.hCursor       = LoadCursor (NULL, IDC_ARROW) ;
@@ -125,7 +127,6 @@ int WINAPI WinMain(
   wndclass.style         = CS_HREDRAW | CS_VREDRAW ;
 
   //Window rect
-  RECT rect;
   rect.left = 0;
   rect.top = 0;
   rect.right = bmp.bmWidth;
@@ -134,7 +135,7 @@ int WINAPI WinMain(
   AdjustWindowRect(
       &rect,
       WS_OVERLAPPEDWINDOW,
-      NULL
+      FALSE
   );
 
   RegisterClass (&wndclass);
@@ -157,5 +158,5 @@ int WINAPI WinMain(
       TranslateMessage(&msg);
       DispatchMessage(&msg);
     }
-    return msg.wParam;
+    return (int)msg.wParam;
 }
